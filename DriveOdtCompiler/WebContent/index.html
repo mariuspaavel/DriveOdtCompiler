@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+
+<style>
+/* Split the screen in half */
+
+
+.mybutton{
+	border-style: solid;
+	border-color: #000000;
+	background-color: #ddddff;
+	font-size: 25px;
+	font-family: Arial;
+}
+.mybutton:hover{
+	background-color: #9999cc;
+}
+
+
+.split {
+  height: 100%;
+  width: 50%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+}
+
+/* Control the left side */
+.left {
+  left: 0;
+  background-color: #ccccee;
+}
+.leftgrid{
+	width: 100%;
+	height: 100%;
+	display:grid;
+	grid-template-rows: 1fr 10fr;
+ 	 grid-template-columns: auto;
+  	padding:30px 20px 30px 30px;
+  	box-sizing: border-box;
+}
+
+/* Control the right side */
+.right {
+  right: 0;
+  background-color: #ccccee;
+}
+.rightgrid{
+	width: 100%;
+	height: 100%;
+	display:grid;
+	grid-template-rows: 10fr 1fr;
+ 	 grid-template-columns: auto;
+  	padding:30px 30px 30px 20px;
+  	box-sizing: border-box;
+}
+
+/* If you want the content centered horizontally and vertically */
+.centered {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+/* Style the image inside the centered container, if needed */
+.centered img {
+  width: 150px;
+  border-radius: 50%;
+}
+
+
+.windowelem{
+	border-style: solid;
+	border-color: #000000;
+}
+
+
+#taskbar{
+	border-style: solid solid none solid;
+	border-color: #000000;
+	display: grid;
+	grid-template-columns: 1fr 5fr;
+	grid-template-rows: auto;
+	grid-gap: 20px;
+	padding: 20px;
+}
+#taskbar.container{
+align-items: center;
+}
+#addressbar{
+	height: 35px; 
+	font-family: Arial;
+	font-size: 30px;
+	padding: 5px;
+	background-color: #ddddff;
+}
+#backbutton{
+	height: 35px;
+	padding: 5px;
+}
+
+.scroll {
+  background-color: #ddddff;
+  overflow-x: hidden;
+  overflow-y: auto;
+  
+}
+.gridwrapper{
+	display: grid;
+  grid-template-columns: repeat(auto-fill, 100px);
+  grid-auto-rows: 140px;
+  grid-gap: 10px;
+}
+
+.filebox{
+	width:100px;
+	height:140px;
+}
+.filebox:hover{
+	background-color: #BBBBCC;
+}
+
+.iconframe{
+width: 80px;
+height: 80px;
+margin-top: 10px;
+margin-left: 10px;
+margin-right: 10px;
+}
+
+.filename{
+width: 100px;
+height: 40px;
+text-align:center;
+/*white-space: nowrap;*/
+overflow: hidden;
+/*text-overflow: ellipsis; */
+word-wrap: break-word;
+font-family: Arial;
+font-size: 18px;
+}
+
+.listcontainer{
+	padding: 20px;
+	box-sizing: border-box;
+  	background-color: #ddddff;
+  	overflow-x: hidden;
+  	overflow-y: auto;
+  	position:relative;
+}
+
+.list{
+width:100%;
+display:grid;
+grid-auto-rows: 50px;
+grid-template-columns: 1fr;
+grid-gap: 10px;
+}
+
+.listentry{
+	border-style: solid;
+	border-color: #555588;
+	border-width: 3px;
+	font-family: Arial;
+	font-size: 25px;
+	align-items: center;
+	padding: 5px;
+}
+.listentry:hover{
+	border-color: #333355;
+	background-color: #aaaacc
+}
+.ghostentry{
+	border-style: solid;
+	border-color: #2222EE;
+	border-width: 3px;
+	
+}
+
+#console{
+	border-style: none solid solid solid;
+	border-color: #000000;
+	display: grid;
+	grid-template-columns: 5fr 1fr;
+	grid-template-rows: auto;
+	grid-gap: 20px;
+	padding: 20px;
+	
+}
+#trashbin{
+	border-style: solid;
+	border-color: #000000;
+	width: 100px;
+	height: 50px;
+	position: absolute;
+	bottom: 10px;
+	left: 50%;
+	font-size: 25px;
+	font-family: Arial;
+}
+
+
+</style>
+
+
+<title>DriveOdtComplier</title>
+</head>
+<body>
+
+<div class="split left">
+	<div class="leftgrid">
+	<div id="taskbar">
+		<div id="backbutton" class="mybutton">BACK</div>
+		<div class = "windowelem" id="addressbar"></div>
+	</div>
+	
+	
+	<div class="windowelem scroll">
+		<div class = "gridwrapper" id="driveview">
+		
+		</div>
+  	</div>
+  	</div>
+</div>
+
+<div class="split right">
+	<div class="rightgrid">
+	<div class="windowelem listcontainer" ondrop="drop(event)" ondragover="allowDrop(event)">
+	<div class="list" id="list">
+
+	</div>
+	<div id="trashbin">DELETE</div>
+	</div>
+	<div id="console">
+	<div></div>
+	<div class="mybutton" onclick="submitList()">SUBMIT</div>
+	</div>
+	</div>
+</div>
+
+
+<script>
+var htmlTest = false;
+
+var addressbar = document.getElementById("addressbar");
+
+const rooturl = "https://mariuspaavel.com/driveodtcompiler/";
+
+function auth(){
+	
+	var url = rooturl + "auth";
+	var http = new XMLHttpRequest();
+	
+	http.onreadystatechange = function() {
+	    if (this.readyState == 4 && this.status == 200) {
+	     	
+	     	var result = JSON.parse(this.responseText);
+	     	
+	     	if(result.result == "failure"){
+	     		window.location.replace(result.url);
+	     	}
+	    }
+	};
+	
+	http.open("GET", url, true);
+	http.send();
+}
+
+
+
+var driveview = document.getElementById("driveview");
+function createFileView(item){
+	var folder = false;
+	if(item.mimeType == "application/vnd.google-apps.folder")folder = true;
+	
+	var box = document.createElement("div");
+	box.className = "filebox";
+	box.item = item;
+	box.draggable = true;
+	box.addEventListener("drag", drag);
+	
+	if(folder){
+		box.addEventListener("click", function(){
+			//alert(this.getAttribute("driveid"));
+			dir(this.item.id);
+		});
+	}
+	
+	var iconview = document.createElement("img");
+	iconview.className = "iconframe";
+	iconview.setAttribute("src", folder ? "folder.png" : "file.png");
+	iconview.draggable = false;
+	box.appendChild(iconview);
+	
+	var nameelem = document.createElement("div");
+	nameelem.className = "filename"
+	nameelem.innerHTML = item.name;
+	box.appendChild(nameelem);
+	
+	driveview.appendChild(box);
+}
+function clear(){
+	while (driveview.firstChild) {
+	    driveview.removeChild(driveview.firstChild);
+	}
+}
+
+//createFileView("123", "hello", "image");
+
+var files = [];
+
+
+function dir(driveid){
+	var url = rooturl+"dir?id="+driveid;
+	
+	var http = new XMLHttpRequest();
+	
+	http.onreadystatechange = function() {
+	    if (this.readyState == 4 && this.status == 200) {
+
+	     	var stResp = JSON.parse(this.responseText);
+	     	files = stResp.files;
+	     	
+	     	addressbar.innerHTML = stResp.path;
+	     	
+	     	getList(stResp.list);
+	     	
+	     	clear();
+	     	for(let i = 0; i < files.length; i++){
+	     		createFileView(files[i]);
+	     	}
+	    }
+	};
+	
+	http.open("GET", url, true);
+	http.send();
+}
+
+
+
+function getList(itemlist){
+	cleanList();
+	itemlist.forEach(function (item, index) {
+		  createListView(item);
+	});
+}
+
+function submitList(){
+	
+	var sbLstReq = new Object();
+	sbLstReq.compilelist = [];
+	
+	list.childNodes.forEach(li => {
+		if(li.className == "listentry")
+	    sbLstReq.compilelist.push(li.item);
+	});
+	var json = JSON.stringify(sbLstReq);
+	//alert(json);
+	
+	var http = new XMLHttpRequest();
+	http.onreadystatechange = function() {
+	    if (this.readyState == 4 && this.status == 200) {
+	     	//var result = JSON.parse(this.responseText);
+	     	//alert(this.responseText);
+	    }
+	};
+	http.open("POST", rooturl+"submitlist", true);
+	http.setRequestHeader("Content-Type", "application/json");
+	http.send(json);
+	
+}
+
+
+var list = document.getElementById("list");
+var ghostentry = document.createElement("div");
+ghostentry.className = "ghostentry";
+var hasdragposition = false;
+var draggedEntry = null;
+
+var afterspace = document.createElement("div");
+afterspace.addEventListener("dragenter", function(event){
+	//alert("enter");
+	if(draggedEntry == null)return;
+	if(draggedEntry == this.previousElementSibling){
+		ghostentry.remove();
+		hasdragposition = false;
+		return;
+	}
+	this.parentNode.insertBefore(ghostentry, this);
+	hasdragposition = true;
+});
+afterspace.addEventListener("dragend", function(event){
+	//alert("dropped");
+	if(hasdragposition){
+		list.insertBefore(this, ghostentry);
+		ghostentry.remove();
+		submitList();
+	}
+	draggedEntry = null;
+});
+list.appendChild(afterspace);
+
+function createListView(item){
+	var entry = document.createElement("div");
+	entry.className = "listentry";
+	entry.item = item;
+	entry.draggable = true;
+
+	
+	entry.addEventListener("dragstart", function(event){
+		draggedEntry = this;
+	});
+	entry.addEventListener("dragenter", function(event){
+		if(draggedEntry == null)return;
+		if(draggedEntry == this || draggedEntry == this.previousElementSibling){
+			ghostentry.remove();
+			hasdragposition = false;
+			return;
+		}
+		this.parentNode.insertBefore(ghostentry, this);
+		hasdragposition = true;
+	});
+	entry.addEventListener("dragend", function(event){
+		//alert("dropped");
+		if(hasdragposition){
+			list.insertBefore(this, ghostentry);
+			ghostentry.remove();
+			submitList();
+		}
+		draggedEntry = null;
+	});
+	
+	entry.innerHTML = item.name;
+	list.insertBefore(entry, afterspace);
+	
+	submitList();
+}
+
+function cleanList(){
+	list.childNodes.forEach(function (entry, index) {
+		if('item' in entry)entry.remove();
+	});	
+}
+
+function init(){
+	
+	if(!htmlTest)auth();
+	
+	document.getElementById("backbutton").addEventListener("click", function(){
+		//alert("back");
+		dir("..");
+	});
+	
+	if(htmlTest)dir("https://mariuspaavel.com/driveodtcompiler/testRequest.json");
+	else dir(".");
+}
+init();
+	
+	
+var trashbin = document.getElementById("trashbin");
+trashbin.addEventListener("drop", function(ev){
+	if(draggedEntry == null)return;
+	draggedEntry.remove();
+	draggedEntry = null;
+	submitList();
+});
+trashbin.addEventListener("dragover", function(ev){
+	if(draggedEntry == null)return;
+	event.preventDefault();
+})
+	
+
+function allowDrop(event) {
+	if(draggedFile == null)return;
+	event.preventDefault();
+}
+
+var draggedFile;
+
+function drag(event) {
+	if(!('item' in event.target))return;
+	draggedFile = event.target;
+	//alert(event.target.name);
+	//event.dataTransfer.setData("text", event.target.name);
+	//ev.dataTransfer.setData("driveid", ev.target.driveid);
+}
+
+function drop(event) {
+	if(draggedFile==null)return;
+	event.preventDefault();
+	//var name = event.dataTransfer.getData("text");
+	//var driveid = ev.dataTransfer.getData("driveid");
+	//ev.target.appendChild(document.getElementById(data));
+	//createListView(name, driveid);
+	//alert(draggedFile.name);
+	createListView(draggedFile.item);
+	draggedFile = null;
+}
+
+
+</script>
+
+</body>
+
+
+
+</html>
