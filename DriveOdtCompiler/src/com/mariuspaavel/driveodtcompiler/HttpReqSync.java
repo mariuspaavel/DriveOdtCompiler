@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
@@ -26,25 +27,62 @@ public class HttpReqSync {
     }
     
 
-    public static String get(String url, Map<String, String> params) throws Exception {
+    public static String get(String url, Map<String, String> params, SessionInfo info) throws Exception {
     	if(!ready)init();
+    	
+    	params.put("key", Auth.api_key);
+    	
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(URI.create(getUrl(url, params)))
-                .setHeader("User-Agent", "Java 11 HttpClient Bot")
+                .setHeader("Accept", "application/json")
+                .setHeader("Authorization", "Bearer " + info.token.getAccess_token())
                 .timeout(Duration.ofSeconds(5))
                 .build();
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
+    
         // print status code
-        System.out.println(response.statusCode());
+        //System.out.println(response.statusCode());
 
         // print response body
-        System.out.println(response.body());
+        //System.out.println(response.body());
 
         return response.body();
     }
+    
+    public static byte[] download(String url, Map<String, String> params, SessionInfo info) throws Exception {
+    	if(!ready)init();
+    	
+    	params.put("key", Auth.api_key);
+    	String fullurl = getUrl(url, params);
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(fullurl))
+                .setHeader("Accept", "application/json")
+                .setHeader("Authorization", "Bearer " + info.token.getAccess_token())
+                .timeout(Duration.ofSeconds(5))
+                .build();
+
+        try {
+        	HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        	return response.body();
+        }catch(HttpTimeoutException e) {
+        	throw new DriveErrorException("timeout: " + fullurl, e);
+        }
+    
+        // print status code
+        //System.out.println(response.statusCode());
+
+        // print response body
+        //System.out.println(response.body());
+
+        
+    }
+
+    
+    
 
     public static String post(String url, Map<? extends Object, ? extends Object> data) throws Exception {
     	if(!ready)init();
@@ -52,7 +90,7 @@ public class HttpReqSync {
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(buildFormDataFromMap(data))
                 .uri(URI.create(url))
-                .setHeader("User-Agent", "Java 11 HttpClient Bot") // add request header
+                .setHeader("Accept", "application/json") // add request header
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .timeout(Duration.ofSeconds(5))
                 .build();
@@ -60,11 +98,11 @@ public class HttpReqSync {
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
         // print status code
-        System.out.println(response.statusCode());
+        //System.out.println(response.statusCode());
 
         // print response body
-        System.out.println(response.body());
-        
+        //System.out.println(response.body());
+
         return response.body();
 
     }

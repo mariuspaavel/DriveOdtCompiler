@@ -11,8 +11,12 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 public class SessionInfo {
 	GoogleAccessToken token;
 	
+	private DriveConnection conn;
+	
 	long expiration_ts;
 	String userKey;
+	
+	
 	
 	private String workDirId;
 	private ArrayList<Item> workPath;
@@ -53,6 +57,8 @@ public class SessionInfo {
 		workPath = new ArrayList<Item>();
 		
 		compilelist = new Item[0];
+		
+		conn = new DriveConnection(this);
 		//userKey = (long)(Long.MAX_VALUE * Math.random());
 	}
 	
@@ -61,7 +67,9 @@ public class SessionInfo {
 		this.compilelist = updatedlist;
 	}
 	
-	
+	public DriveConnection getDriveConnection() {
+		return conn;
+	}
 	
 	
 	private static HashMap<String, SessionInfo> sessions = new HashMap<String, SessionInfo>();

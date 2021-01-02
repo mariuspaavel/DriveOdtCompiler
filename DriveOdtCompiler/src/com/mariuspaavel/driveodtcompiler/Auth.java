@@ -59,12 +59,14 @@ public class Auth extends HttpServlet {
 	}
 	
 	
-	public static String client_id = "1084305052714-j7jpnfpoqc0cnqmgp2spjminag992shd.apps.googleusercontent.com";
-	public static String client_secret = "h602wp2tOF3kh56tO_xhJIMt";
+	public static final String client_id = "1084305052714-j7jpnfpoqc0cnqmgp2spjminag992shd.apps.googleusercontent.com";
+	public static final String client_secret = "h602wp2tOF3kh56tO_xhJIMt";
+	
+	public static final String api_key="AIzaSyBdSFvYCSccSdB3yRVorXRoYxoFgBCO-Us";
 	
 	private String generateAuthUrl() {
 		return "https://accounts.google.com/o/oauth2/v2/auth?"
-				+ "scope=https%3A//www.googleapis.com/auth/drive.metadata.readonly&"
+				+ "scope=https%3A//www.googleapis.com/auth/drive.readonly&"
 				+ "access_type=offline&"
 				+ "include_granted_scopes=true&"
 				+ "response_type=code&"

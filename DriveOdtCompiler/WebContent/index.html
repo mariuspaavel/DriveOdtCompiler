@@ -102,12 +102,13 @@ align-items: center;
 #backbutton{
 	height: 35px;
 	padding: 5px;
+	cursor: pointer;
 }
 
 .scroll {
   background-color: #ddddff;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: scroll;
   
 }
 .gridwrapper{
@@ -123,6 +124,12 @@ align-items: center;
 }
 .filebox:hover{
 	background-color: #BBBBCC;
+}
+.odtbox{
+	cursor: pointer;
+}
+.folderbox{
+	cursor: pointer;
 }
 
 .iconframe{
@@ -145,16 +152,19 @@ font-family: Arial;
 font-size: 18px;
 }
 
-.listcontainer{
+
+#listcontainer{
 	padding: 20px;
 	box-sizing: border-box;
   	background-color: #ddddff;
   	overflow-x: hidden;
-  	overflow-y: auto;
-  	position:relative;
+  	overflow-y: scroll;
+  	width: 100%;
+  	height: 100%;
 }
 
-.list{
+
+#list{
 width:100%;
 display:grid;
 grid-auto-rows: 50px;
@@ -170,11 +180,22 @@ grid-gap: 10px;
 	font-size: 25px;
 	align-items: center;
 	padding: 5px;
+	cursor: pointer;
 }
 .listentry:hover{
 	border-color: #333355;
 	background-color: #aaaacc
 }
+
+.selectedentry{
+	border-color: #222244;
+	background-color: #8888aa;
+}
+.selectedentry:hover{
+	border-color: #222244;
+	background-color: #8888aa;
+}
+
 .ghostentry{
 	border-style: solid;
 	border-color: #2222EE;
@@ -182,9 +203,14 @@ grid-gap: 10px;
 	
 }
 
-#console{
+#consolewindow{
 	border-style: none solid solid solid;
 	border-color: #000000;
+}
+
+#mainconsole{
+	width: 100%;
+	height: 100%;
 	display: grid;
 	grid-template-columns: 5fr 1fr;
 	grid-template-rows: auto;
@@ -192,16 +218,10 @@ grid-gap: 10px;
 	padding: 20px;
 	
 }
-#trashbin{
-	border-style: solid;
-	border-color: #000000;
-	width: 100px;
-	height: 50px;
-	position: absolute;
-	bottom: 10px;
-	left: 50%;
-	font-size: 25px;
-	font-family: Arial;
+#entryconsole{
+	width: 100%;
+	height: 100%;
+	display: none;
 }
 
 
@@ -230,16 +250,24 @@ grid-gap: 10px;
 
 <div class="split right">
 	<div class="rightgrid">
-	<div class="windowelem listcontainer" ondrop="drop(event)" ondragover="allowDrop(event)">
-	<div class="list" id="list">
+	
+		
+		<div id= "listcontainer" class="windowelem" ondrop="drop(event)" ondragover="allowDrop(event)">
+			<div id="list">
 
-	</div>
-	<div id="trashbin">DELETE</div>
-	</div>
-	<div id="console">
-	<div></div>
-	<div class="mybutton" onclick="submitList()">SUBMIT</div>
-	</div>
+			</div>
+		</div>
+	
+		<div id="consolewindow">
+			<div id="mainconsole">
+				<div></div>
+				<a href="https://mariuspaavel.com/driveodtcompiler/download" download="valmisfail.odt"><div class="mybutton">SUBMIT</div></a>
+			</div>
+			<div id = "entryconsole">
+				<button id="mainmenubtn" class="mybutton" onClick="switchconsole('main')">BACK</button>
+				<button id="deletebutton" class="mybutton" onClick="deleteSelectedEntry()">DELETE</button>
+			</div>
+		</div>
 	</div>
 </div>
 
@@ -276,19 +304,33 @@ function auth(){
 var driveview = document.getElementById("driveview");
 function createFileView(item){
 	var folder = false;
-	if(item.mimeType == "application/vnd.google-apps.folder")folder = true;
+	
 	
 	var box = document.createElement("div");
 	box.className = "filebox";
 	box.item = item;
-	box.draggable = true;
-	box.addEventListener("drag", drag);
+	
+	if(item.mimeType == "application/vnd.google-apps.folder"){
+		folder = true;
+		box.className = "filebox folderbox";
+	}
+	
+	if(item.mimeType == "application/vnd.oasis.opendocument.text"){
+		box.className = "filebox odtbox"
+		box.draggable = true;
+		box.addEventListener("drag", drag);
+	}
+	else{
+		box.draggable = false;
+	}
+	
 	
 	if(folder){
 		box.addEventListener("click", function(){
 			//alert(this.getAttribute("driveid"));
 			dir(this.item.id);
 		});
+		box.classname = "filebox folderbox";
 	}
 	
 	var iconview = document.createElement("img");
@@ -302,7 +344,8 @@ function createFileView(item){
 	nameelem.innerHTML = item.name;
 	box.appendChild(nameelem);
 	
-	driveview.appendChild(box);
+	if(list.contains(ghostentry))list.insertBefore(box, ghostentry);
+	else driveview.appendChild(box);
 }
 function clear(){
 	while (driveview.firstChild) {
@@ -345,6 +388,7 @@ function dir(driveid){
 
 function getList(itemlist){
 	cleanList();
+	
 	itemlist.forEach(function (item, index) {
 		  createListView(item);
 	});
@@ -378,22 +422,25 @@ function submitList(){
 
 var list = document.getElementById("list");
 var ghostentry = document.createElement("div");
+
 ghostentry.className = "ghostentry";
 var hasdragposition = false;
 var draggedEntry = null;
 
 var afterspace = document.createElement("div");
+afterspace.id = "afterspace";
 afterspace.addEventListener("dragenter", function(event){
 	//alert("enter");
-	if(draggedEntry == null)return;
 	if(draggedEntry == this.previousElementSibling){
 		ghostentry.remove();
 		hasdragposition = false;
-		return;
 	}
-	this.parentNode.insertBefore(ghostentry, this);
-	hasdragposition = true;
+	else if(draggedEntry != null){                      // || draggedFile != null){
+		this.parentNode.insertBefore(ghostentry, this);
+		hasdragposition = true;
+	}
 });
+/*
 afterspace.addEventListener("dragend", function(event){
 	//alert("dropped");
 	if(hasdragposition){
@@ -403,6 +450,7 @@ afterspace.addEventListener("dragend", function(event){
 	}
 	draggedEntry = null;
 });
+*/
 list.appendChild(afterspace);
 
 function createListView(item){
@@ -416,14 +464,14 @@ function createListView(item){
 		draggedEntry = this;
 	});
 	entry.addEventListener("dragenter", function(event){
-		if(draggedEntry == null)return;
 		if(draggedEntry == this || draggedEntry == this.previousElementSibling){
 			ghostentry.remove();
 			hasdragposition = false;
-			return;
 		}
-		this.parentNode.insertBefore(ghostentry, this);
-		hasdragposition = true;
+		else if(draggedEntry != null){ // || draggedFile != null){
+			this.parentNode.insertBefore(ghostentry, this);
+			hasdragposition = true;
+		}
 	});
 	entry.addEventListener("dragend", function(event){
 		//alert("dropped");
@@ -434,17 +482,43 @@ function createListView(item){
 		}
 		draggedEntry = null;
 	});
+	entry.addEventListener("click", function(event){
+		selectListEntry(this);
+	});
 	
 	entry.innerHTML = item.name;
 	list.insertBefore(entry, afterspace);
-	
-	submitList();
+
+}
+
+var selectedEntry;
+function selectListEntry(entryToSelect){
+	if(selectedEntry != null){
+		selectedEntry.className = "listentry";
+	}
+	selectedEntry = entryToSelect;
+	selectedEntry.className = "listentry selectedentry"
+	switchconsole("entry");
 }
 
 function cleanList(){
-	list.childNodes.forEach(function (entry, index) {
-		if('item' in entry)entry.remove();
-	});	
+	while (list.firstChild) {
+	    list.removeChild(list.firstChild);
+	}
+	list.appendChild(afterspace);
+}
+
+function switchconsole(type){
+	document.getElementById("mainconsole").style.display = "none";
+	document.getElementById("entryconsole").style.display = "none";
+	switch(type){
+	case "main":
+		document.getElementById("mainconsole").style.display = "grid";
+		break;
+	case "entry":
+		document.getElementById("entryconsole").style.display = "initial";
+		break;
+	}
 }
 
 function init(){
@@ -461,18 +535,13 @@ function init(){
 }
 init();
 	
-	
-var trashbin = document.getElementById("trashbin");
-trashbin.addEventListener("drop", function(ev){
-	if(draggedEntry == null)return;
-	draggedEntry.remove();
-	draggedEntry = null;
+function deleteSelectedEntry(){
+	if(selectedEntry == null)return;
+	selectedEntry.remove();
+	selectedEntry = null;
 	submitList();
-});
-trashbin.addEventListener("dragover", function(ev){
-	if(draggedEntry == null)return;
-	event.preventDefault();
-})
+	switchconsole("main");
+}
 	
 
 function allowDrop(event) {
@@ -500,6 +569,7 @@ function drop(event) {
 	//alert(draggedFile.name);
 	createListView(draggedFile.item);
 	draggedFile = null;
+	submitList();
 }
 
 

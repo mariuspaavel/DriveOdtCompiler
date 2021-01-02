@@ -1,7 +1,11 @@
 package com.mariuspaavel.driveodtcompiler;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -9,18 +13,17 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
 /**
- * Servlet implementation class Cd
+ * Servlet implementation class Download
  */
-@WebServlet("/dir")
-public class Dir extends HttpServlet {
+@WebServlet("/download")
+public class Download extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public Dir() {
+    public Download() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -30,25 +33,24 @@ public class Dir extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		
-		Get get = (params, info)->{
-
-			String folderid = params.get("id")[0];
-			if(folderid.equals(".."))info.change_to_parent_dir();
-			else if(folderid.equals(".")) {}
-			else {
-				Item dircheck = info.getDriveConnection().get_item(folderid);
-				if(!dircheck.getMimeType().equals("application/vnd.google-apps.folder"))throw new Exception("directory not found");
-				info.change_directory(dircheck);
-			}
-			StatusResponse stResp = new StatusResponse();
-			stResp.setFiles(info.getDriveConnection().list_dir(info.getWorkDir()));
-			stResp.setList(info.compilelist);
-			stResp.setPath(info.getPathString());
+		OutputStream os = response.getOutputStream();
+		try {
+			SessionInfo sessionInfo = SessionInfo.getSession(request.getSession().getAttribute("appsessionkey").toString());
+			Map<String, String[]> params = request.getParameterMap(); 
 			
-			return stResp;
-		};
-		get.run(request, response);
-		
+			InputStream[] inputfiles = new InputStream[sessionInfo.compilelist.length];
+			
+			for(int i = 0; i < inputfiles.length; i++) {
+				byte[] file = sessionInfo.getDriveConnection().downloadFile(sessionInfo.compilelist[i]);
+				inputfiles[i] = new ByteArrayInputStream(file);
+			}
+			byte[] output = Cat.cat(inputfiles);
+			os.write(output);
+			os.flush();
+			
+		}catch(Exception e) {
+			os.write(Utils.objectMapper.writeValueAsString(new ErrorReport(e)).getBytes());
+		}	
 	}
 
 	/**
