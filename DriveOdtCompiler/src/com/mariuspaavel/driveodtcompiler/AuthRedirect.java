@@ -42,7 +42,7 @@ public class AuthRedirect extends HttpServlet {
 			googlereqparams.put("code", code);
 			googlereqparams.put("client_id", Auth.client_id);
 			googlereqparams.put("client_secret", Auth.client_secret);
-			googlereqparams.put("redirect_uri", "http://mariuspaavel.com/driveodtcompiler/authredirect");
+			googlereqparams.put("redirect_uri", "https://mariuspaavel.com/odtapp/authredirect");
 			googlereqparams.put("grant_type", "authorization_code");
 			
 			String json = HttpReqSync.post("https://oauth2.googleapis.com/token", googlereqparams);
@@ -53,7 +53,7 @@ public class AuthRedirect extends HttpServlet {
 			
 			//response.getWriter().append(SessionInfo.getSession(key).toString());
 			
-			response.sendRedirect("http://mariuspaavel.com/driveodtcompiler/");
+			response.sendRedirect("https://mariuspaavel.com/odtapp/");
 			
 		}catch(AuthException e) {
 			response.getWriter().append(e.getMessage());

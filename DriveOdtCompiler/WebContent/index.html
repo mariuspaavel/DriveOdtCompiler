@@ -13,6 +13,7 @@
 	background-color: #ddddff;
 	font-size: 25px;
 	font-family: Arial;
+	margin: 10px;
 }
 .mybutton:hover{
 	background-color: #9999cc;
@@ -211,16 +212,13 @@ grid-gap: 10px;
 #mainconsole{
 	width: 100%;
 	height: 100%;
-	display: grid;
-	grid-template-columns: 5fr 1fr;
-	grid-template-rows: auto;
-	grid-gap: 20px;
 	padding: 20px;
 	
 }
 #entryconsole{
 	width: 100%;
 	height: 100%;
+	padding: 20px;
 	display: none;
 }
 
@@ -228,7 +226,7 @@ grid-gap: 10px;
 </style>
 
 
-<title>DriveOdtComplier</title>
+<title>OdtApp</title>
 </head>
 <body>
 
@@ -261,7 +259,7 @@ grid-gap: 10px;
 		<div id="consolewindow">
 			<div id="mainconsole">
 				<div></div>
-				<a href="https://mariuspaavel.com/driveodtcompiler/download" download="valmisfail.odt"><div class="mybutton">SUBMIT</div></a>
+				<a href="https://mariuspaavel.com/odtapp/download" class="button mybutton" download="valmisfail.odt">SUBMIT</a>
 			</div>
 			<div id = "entryconsole">
 				<button id="mainmenubtn" class="mybutton" onClick="switchconsole('main')">BACK</button>
@@ -277,7 +275,7 @@ var htmlTest = false;
 
 var addressbar = document.getElementById("addressbar");
 
-const rooturl = "https://mariuspaavel.com/driveodtcompiler/";
+const rooturl = "https://mariuspaavel.com/odtapp/";
 
 function auth(){
 	
@@ -513,7 +511,7 @@ function switchconsole(type){
 	document.getElementById("entryconsole").style.display = "none";
 	switch(type){
 	case "main":
-		document.getElementById("mainconsole").style.display = "grid";
+		document.getElementById("mainconsole").style.display = "initial";
 		break;
 	case "entry":
 		document.getElementById("entryconsole").style.display = "initial";
@@ -530,7 +528,7 @@ function init(){
 		dir("..");
 	});
 	
-	if(htmlTest)dir("https://mariuspaavel.com/driveodtcompiler/testRequest.json");
+	if(htmlTest)dir("https://mariuspaavel.com/odtapp/testRequest.json");
 	else dir(".");
 }
 init();

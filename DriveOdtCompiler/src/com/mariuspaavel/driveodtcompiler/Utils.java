@@ -25,5 +25,6 @@ public class Utils {
 	}
 	public static ObjectMapper objectMapper = new ObjectMapper();
 
+	public static final String approot = "https://mariuspaavel.com/odtapp/";
 	
 }

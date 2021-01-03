@@ -59,10 +59,10 @@ public class Auth extends HttpServlet {
 	}
 	
 	
-	public static final String client_id = "1084305052714-j7jpnfpoqc0cnqmgp2spjminag992shd.apps.googleusercontent.com";
-	public static final String client_secret = "h602wp2tOF3kh56tO_xhJIMt";
+	public static final String client_id = "753451643595-kf4osl9beq8ifo4o449dp0cd4rpenhg0.apps.googleusercontent.com";
+	public static final String client_secret = "TtpyR68EQ1wgJdQdqd-BQh4y";
 	
-	public static final String api_key="AIzaSyBdSFvYCSccSdB3yRVorXRoYxoFgBCO-Us";
+	public static final String api_key="AIzaSyAgEqHWdVNcuyDERYcOIwd1pFMAY8qVh8o";
 	
 	private String generateAuthUrl() {
 		return "https://accounts.google.com/o/oauth2/v2/auth?"
@@ -71,7 +71,7 @@ public class Auth extends HttpServlet {
 				+ "include_granted_scopes=true&"
 				+ "response_type=code&"
 				+ "state=state_parameter_passthrough_value&"
-				+ "redirect_uri=http%3A//mariuspaavel.com/driveodtcompiler/authredirect&"
+				+ "redirect_uri=https%3A//mariuspaavel.com/odtapp/authredirect&"
 				+ "client_id=" + client_id;
 	}
 
